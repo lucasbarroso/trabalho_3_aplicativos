@@ -1,43 +1,85 @@
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
+import { Pressable, useColorScheme } from 'react-native';
 
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
+import { useAuth } from '../../components/AuthContext';
+import { ROUTES } from '../../utils/constants';
+
+// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
+function TabBarIcon(props: {
+  name: React.ComponentProps<typeof FontAwesome>['name'];
+  color: string;
+}) {
+  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
+}
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { jwt, loading, logout } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !jwt) {
+      router.replace(ROUTES.LOGIN);
+    }
+  }, [jwt, loading]);
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace(ROUTES.LOGIN);
+  };
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
+          tabBarItemStyle: { marginTop: 0 },
+          headerRight: () => (
+            <Pressable onPress={handleLogout} style={{ marginRight: 15 }}>
+              <FontAwesome
+                name="sign-out"
+                size={25}
+                color={Colors[colorScheme ?? 'light'].text}
+              />
+            </Pressable>
+          ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="posts"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Posts',
+          tabBarIcon: ({ color }) => <TabBarIcon name="list" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="my-posts"
+        options={{
+          title: 'Meus Posts',
+          tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="create-post"
+        options={{
+          title: 'Criar Post',
+          tabBarIcon: ({ color }) => <TabBarIcon name="plus" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="users"
+        options={{
+          title: 'Usuários',
+          tabBarIcon: ({ color }) => <TabBarIcon name="users" color={color} />,
         }}
       />
     </Tabs>
